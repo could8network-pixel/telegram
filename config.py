@@ -1,4 +1,4 @@
-mport os
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,6 +8,8 @@ USER_ID = os.getenv("USER_ID")
 API_TOKEN = os.getenv("API_TOKEN")
 GEO_CODE = os.getenv("GEO_CODE")
 PINCODE = os.getenv("PINCODE")
+
+ADMIN_ID = 476093481
 
 API_URL = "https://foursaeasy.com/API/TransactionAPI"
 
