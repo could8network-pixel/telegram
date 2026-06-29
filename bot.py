@@ -53,7 +53,7 @@ async def operator(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return AMOUNT
 
 async def amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    amount_val = update.message.text
+    amount_val = op_name = context.user_data.get("operator") 
     mobile_num = context.user_data.get("mobile")
     op_name = update.message.text
     sp_key = OPERATORS.get(op_name)
@@ -84,7 +84,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Cancelled.", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
-if __name__ == '__main__':
+if name == "main":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     
     conv_handler = ConversationHandler(
