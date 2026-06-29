@@ -1,3 +1,8 @@
+import os
+import uuid
+import logging
+import requests
+from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import (
     ApplicationBuilder,
@@ -7,15 +12,19 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-from dotenv import load_dotenv
-import os
-import requests
-import uuid
+# config ഫയലിൽ നിന്ന് ഇംപോർട്ട് ചെയ്യുന്നു
 from config import ADMIN_ID, USER_ID, API_TOKEN, GEO_CODE, PINCODE, API_URL, OPERATORS
+
+# ലോഗിങ് സെറ്റപ്പ്
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
+    level=logging.INFO
+)
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# സ്റ്റേറ്റുകൾ
 MOBILE, OPERATOR, AMOUNT = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -34,6 +43,7 @@ async def recharge(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def mobile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["mobile"] = update.message.text
     operator_names = list(OPERATORS.keys())
+    # 2 കോളങ്ങളായി കീബോർഡ് ക്രമീകരിക്കുന്നു
     keyboard = [operator_names[i:i+2] for i in range(0, len(operator_names), 2)]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
     await update.message.reply_text("📶 Select Operator:", reply_markup=reply_markup)
@@ -46,26 +56,26 @@ async def operator(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     amount_val = update.message.text
-    mobile = context.user_data["mobile"]
-    op_name = context.user_data["operator"]
+    mobile_num = context.user_data.get("mobile")
+    op_name = update.message.text
     sp_key = OPERATORS.get(op_name)
     
     if not sp_key:
-        await update.message.reply_text("❌ Invalid Operator.")
-        return ConversationHandler.END
+        await update.message.reply_text("❌ Invalid Operator. Please select from the keyboard.")
+        return OPERATOR
 
     params = {
-        "UserID": USER_ID, "Token": API_TOKEN, "Account": mobile,
+        "UserID": USER_ID, "Token": API_TOKEN, "Account": mobile_num,
         "Amount": amount_val, "SPKey": sp_key,
         "APIRequestID": str(uuid.uuid4()), "GEOCode": GEO_CODE,
-        "CustomerNumber": mobile, "Pincode": PINCODE, "Format": "1"
+        "CustomerNumber": mobile_num, "Pincode": PINCODE, "Format": "1"
     }
 
     try:
         response = requests.get(API_URL, params=params, timeout=30)
         data = response.json()
         if str(data.get("STATUS")) == "2":
-            await update.message.reply_text(f"✅ Success\nMobile: {mobile}\nAmount: ₹{amount_val}\nRPID: {data.get('RPID')}")
+            await update.message.reply_text(f"✅ Success\nMobile: {mobile_num}\nAmount: ₹{amount_val}\nRPID: {data.get('RPID')}")
         else:
             await update.message.reply_text(f"❌ Failed: {data.get('MSG')}")
     except Exception as e:
@@ -76,7 +86,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Cancelled.", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
-if __name__ == '__main__':
+if name == 'main':
+    # അപ്ലിക്കേഷൻ ബിൽഡർ ശരിയായ രീതിയിൽ ഉപയോഗിക്കുന്നു
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     
     conv_handler = ConversationHandler(
