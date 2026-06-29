@@ -19,3 +19,4 @@ OPERATORS = {
     "VI": "37",
     "BSNL STV": "5",
     "BSNL Talktime": "4"
+}
