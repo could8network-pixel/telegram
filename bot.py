@@ -12,33 +12,39 @@ import os
 import requests
 import uuid
 
-from config import ADMIN_ID, USER_ID, API_TOKEN, GEO_CODE, PINCODE, API_URL
+# config.py-
+from config import ADMIN_ID, USER_ID, API_TOKEN, GEO_CODE, PINCODE, API_URL, OPERATORS
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 MOBILE, OPERATOR, AMOUNT = range(3)
 
-OPERATORS = [["Airtel", "Jio"], ["VI", "BSNL"]]
-SP_KEYS = {"Airtel": "3", "Jio": "116", "VI": "37", "BSNL": "4"}
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("⛔️ You are not authorized.")
+        
+           await update.message.reply_text("⛔️ You are not authorized.")
         return
+
     await update.message.reply_text("👋 Welcome to Recharge Bot\n\nType /recharge to start.")
 
 async def recharge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
+        
         await update.message.reply_text("⛔️ You are not authorized.")
         return
+        
     await update.message.reply_text("📱 Enter Mobile Number:")
     return MOBILE
 
 async def mobile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["mobile"] = update.message.text
-    keyboard = ReplyKeyboardMarkup(OPERATORS, resize_keyboard=True, one_time_keyboard=True)
-    await update.message.reply_text("📶 Select Operator:", reply_markup=keyboard)
+    
+    operator_names = list(OPERATORS.keys())
+    keyboard = [operator_names[i:i+2] for i in range(0, len(operator_names), 2)]
+    
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+    await update.message.reply_text("📶 Select Operator:", reply_markup=reply_markup)
     return OPERATOR
 
 async def operator(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,13 +57,14 @@ async def amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mobile = context.user_data["mobile"]
     op_name = context.user_data["operator"]
     
-    if op_name not in SP_KEYS:
-        await update.message.reply_text("❌ Invalid Operator selected.")
+    sp_key = OPERATORS.get(op_name)
+    if not sp_key:
+        await update.message.reply_text("❌ Invalid Operator.")
         return ConversationHandler.END
 
     params = {
         "UserID": USER_ID, "Token": API_TOKEN, "Account": mobile,
-        "Amount": amount_val, "SPKey": SP_KEYS[op_name],
+        "Amount": amount_val, "SPKey": sp_key,
         "APIRequestID": str(uuid.uuid4()), "GEOCode": GEO_CODE,
         "CustomerNumber": mobile, "Pincode": PINCODE, "Format": "1"
     }
