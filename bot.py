@@ -12,10 +12,9 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-# config ഫയലിൽ നിന്ന് ഇംപോർട്ട് ചെയ്യുന്നു
 from config import ADMIN_ID, USER_ID, API_TOKEN, GEO_CODE, PINCODE, API_URL, OPERATORS
 
-# ലോഗിങ് സെറ്റപ്പ്
+# Logging setup
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
     level=logging.INFO
@@ -24,14 +23,14 @@ logging.basicConfig(
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# സ്റ്റേറ്റുകൾ
+# States
 MOBILE, OPERATOR, AMOUNT = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("⛔️ You are not authorized.")
         return
-    await update.message.reply_text("👋 Welcome to Recharge Bot\n\nType /recharge to start.")
+    await update.message.reply_text("👋 Welcome to Recharge Bot.\n\nType /recharge to start.")
 
 async def recharge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
@@ -43,7 +42,6 @@ async def recharge(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def mobile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["mobile"] = update.message.text
     operator_names = list(OPERATORS.keys())
-    # 2 കോളങ്ങളായി കീബോർഡ് ക്രമീകരിക്കുന്നു
     keyboard = [operator_names[i:i+2] for i in range(0, len(operator_names), 2)]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
     await update.message.reply_text("📶 Select Operator:", reply_markup=reply_markup)
@@ -87,7 +85,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 if name == 'main':
-    # അപ്ലിക്കേഷൻ ബിൽഡർ ശരിയായ രീതിയിൽ ഉപയോഗിക്കുന്നു
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     
     conv_handler = ConversationHandler(
