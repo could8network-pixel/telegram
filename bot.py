@@ -55,6 +55,8 @@ async def amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "CustomerNumber":mobile_num,"Pincode":PINCODE,"Format":"1"}
     try:
         data=requests.get(API_URL,params=params,timeout=30).json()
+        print("API Response:", data)
+        await update.message.reply_text(f"API Response: {data}")
         if str(data.get("STATUS"))=="2":
             await update.message.reply_text(f"✅ Success\nMobile:{mobile_num}\nAmount:₹{amount_val}")
         else:
